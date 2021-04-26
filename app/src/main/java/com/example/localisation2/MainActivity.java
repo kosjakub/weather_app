@@ -58,12 +58,12 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             MainActivity activity = mActivity.get();
-            String lat = msg.getData().getString("lat");
-            String lon = msg.getData().getString("lon");
+            String latitude = msg.getData().getString("lat");
+            String longitude = msg.getData().getString("lon");
             String web = msg.getData().getString("web");
             String city = msg.getData().getString("city");
-            activity.latTextView.setText(lat);
-            activity.lonTextView.setText(lon);
+            activity.latTextView.setText(latitude);
+            activity.lonTextView.setText(longitude);
             activity.cityTextView.setText(city);
             activity.weatherWebView.loadDataWithBaseURL(null, web, "text/html", "utf-8", null);
         }
@@ -87,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSIONS_REQUEST_LOCATION: {
-                // Ifrequestiscancelled, theresultarraysareempty.
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     accessLocation();
                 }
@@ -98,12 +97,12 @@ public class MainActivity extends AppCompatActivity {
     private final LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            final double lat = location.getLatitude();
-            final double lon = location.getLongitude();
+            final double latitude = location.getLatitude();
+            final double longitude = location.getLongitude();
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    updateWeather(lat, lon);
+                    updateWeather(latitude, longitude);
                 }
             }).start();
         }
@@ -131,7 +130,6 @@ public class MainActivity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{
                     Manifest.permission.ACCESS_FINE_LOCATION}, MY_PERMISSIONS_REQUEST_LOCATION);
-            // MY_PERMISSIONS_REQUEST_LOCATIONisan// app-definedintconstant. Thecallbackmethodgetsthe// resultof therequest.
         } else {
             accessLocation();
         }
@@ -168,28 +166,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateWeather(double lat, double lon) {
-        String weather = getContentFromUrl(String.format(OPENWEATHER_WEATHER_QUERY, lat,lon) );
+    private void updateWeather(double latitude, double longitude) {
+        String weather = getContentFromUrl(String.format(OPENWEATHER_WEATHER_QUERY, latitude,longitude) );
         Document doc = Jsoup.parse(weather);
         Element link = doc.select("div").first();
         String city = link.text();
-        Message m = myHandler.obtainMessage();
-        Bundle b = new Bundle();
-        b.putString("lat", String.valueOf(lat));
-        b.putString("lon", String.valueOf(lon));
-        b.putString("web", weather);
-        b.putString("city", city);
-        m.setData(b);
-        myHandler.sendMessage(m);
+        Message message = myHandler.obtainMessage();
+        Bundle bundle = new Bundle();
+        bundle.putString("lat", String.valueOf(latitude));
+        bundle.putString("lon", String.valueOf(longitude));
+        bundle.putString("web", weather);
+        bundle.putString("city", city);
+        message.setData(bundle);
+        myHandler.sendMessage(message);
     }
-    public String getContentFromUrl(String addr) {
+    
+    public String getContentFromUrl(String address) {
         String content = null;
 
-        Log.v("[GEO WEATHER ACTIVITY]", addr);
+        Log.v("[GEO WEATHER ACTIVITY]", address);
         HttpURLConnection urlConnection = null;
         URL url = null;
         try {
-            url = new URL(addr);
+            url = new URL(address);
             urlConnection = (HttpURLConnection) url.openConnection();
             BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
 
